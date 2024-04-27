@@ -1,5 +1,4 @@
-﻿using Emgu.CV.Features2D;
-using MathNet.Numerics.Statistics;
+﻿using MathNet.Numerics.Statistics;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,12 +9,12 @@ using System.Threading.Tasks;
 
 namespace lab2.ParallelAlgorithm
 {
-    internal class ParallelAlgorithm
+    internal class SafeParallelAlgorithm
     {
         private int _groupSize;
         private double _threshold;
 
-        public ParallelAlgorithm(int groupSize, double threshold)
+        public SafeParallelAlgorithm(int groupSize, double threshold)
         {
             _groupSize = groupSize;
             _threshold = threshold;
@@ -30,7 +29,7 @@ namespace lab2.ParallelAlgorithm
             watch.Stop();
             BigInteger sumIndexDeviation = SumIndexDeviationParallelAlgorithm(indexDeviation);
 
-            Console.WriteLine($"Скорость небезопасного параллельного кода - {watch.Elapsed}, количество индексов - {indexDeviation.Length}, сумма индексов - {sumIndexDeviation}");
+            Console.WriteLine($"Скорость безопасного параллельного кода - {watch.Elapsed}, количество индексов - {indexDeviation.Length}, сумма индексов - {sumIndexDeviation}");
             return sumIndexDeviation;
         }
 
@@ -44,11 +43,17 @@ namespace lab2.ParallelAlgorithm
         private double[] CreateStandartDeviationSeries(double[] series)
         {
             double[] standardDeviations = new double[series.Length - (_groupSize - 1)];
+            object lockObject = new object();
 
             Parallel.For(0, series.Length - (_groupSize - 1), i =>
             {
                 double[] group = series.Skip(i).Take(_groupSize).ToArray();
-                standardDeviations[i] = Statistics.StandardDeviation(group);
+                double deviation = Statistics.StandardDeviation(group);
+
+                lock (lockObject)
+                {
+                    standardDeviations[i] = deviation;
+                }
             });
 
             return standardDeviations;
@@ -70,7 +75,7 @@ namespace lab2.ParallelAlgorithm
             BigInteger sum = indexDeviation.Max();
             for (int i = 0; i < indexDeviation.Length; i++)
             {
-                sum += indexDeviation[i];
+                sum += indexDeviation[i] * i;
             }
             return sum;
         }

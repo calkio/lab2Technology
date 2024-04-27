@@ -1,4 +1,5 @@
-﻿using MathNet.Numerics.Statistics;
+﻿using Emgu.CV.Features2D;
+using MathNet.Numerics.Statistics;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -7,31 +8,29 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace lab2.SequentialAlgorithm
+namespace lab2.ParallelAlgorithm
 {
-    internal class SequentialAlgorithm
+    internal class NotSafeParallelAlgorithm
     {
-        private int _groupSize; 
+        private int _groupSize;
         private double _threshold;
 
-        public SequentialAlgorithm(int groupSize, double threshold)
+        public NotSafeParallelAlgorithm(int groupSize, double threshold)
         {
             _groupSize = groupSize;
             _threshold = threshold;
         }
 
-
-        public BigInteger CalculeteTimeSequentialAlgorithm(double[] pixcelData)
+        public BigInteger CalculeteTimeParalellAlgorithm(double[] pixcelData)
         {
             Stopwatch watch = new Stopwatch();
             watch.Restart();
 
             int[] indexDeviation = FindIndexDeviation(pixcelData);
             watch.Stop();
-            BigInteger sumIndexDeviation = SumIndexDeviationSequentialAlgorithm(indexDeviation);
+            BigInteger sumIndexDeviation = SumIndexDeviationParallelAlgorithm(indexDeviation);
 
-            Console.WriteLine($"Скорость последовательного кода - {watch.Elapsed}, количество индексов - {indexDeviation.Length}, сумма индексов - {sumIndexDeviation}");
-
+            Console.WriteLine($"Скорость небезопасного параллельного кода - {watch.Elapsed}, количество индексов - {indexDeviation.Length}, сумма индексов - {sumIndexDeviation}");
             return sumIndexDeviation;
         }
 
@@ -44,23 +43,29 @@ namespace lab2.SequentialAlgorithm
         }
         private double[] CreateStandartDeviationSeries(double[] series)
         {
-            double[] standardDeviations = Enumerable.Range(0, series.Length - (_groupSize - 1))
-                                                    .Select(i => series.Skip(i).Take(_groupSize))
-                                                    .Select(group => Statistics.StandardDeviation(group.ToArray()))
-                                                    .ToArray();
+            double[] standardDeviations = new double[series.Length - (_groupSize - 1)];
+
+            Parallel.For(0, series.Length - (_groupSize - 1), i =>
+            {
+                double[] group = series.Skip(i).Take(_groupSize).ToArray();
+                standardDeviations[i] = Statistics.StandardDeviation(group);
+            });
+
             return standardDeviations;
         }
         private int[] FindIndexDeviationByThreshold(double[] seriesDeviation)
         {
-            int[] indexDeviationByThreshold = seriesDeviation.Select((value, index) => new { Value = value, Index = index })
+            int[] indexDeviationByThreshold = seriesDeviation.AsParallel()
+                                                             .Select((value, index) => new { Value = value, Index = index })
                                                              .Where(item => item.Value > _threshold)
                                                              .Select(item => item.Index)
                                                              .ToArray();
+
             return indexDeviationByThreshold;
         }
 
 
-        private BigInteger SumIndexDeviationSequentialAlgorithm(int[] indexDeviation)
+        private BigInteger SumIndexDeviationParallelAlgorithm(int[] indexDeviation)
         {
             BigInteger sum = indexDeviation.Max();
             for (int i = 0; i < indexDeviation.Length; i++)

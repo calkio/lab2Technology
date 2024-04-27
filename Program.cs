@@ -8,7 +8,8 @@ using System.Numerics;
 internal class Program
 {
     static private BigInteger _sumIndexSequentialAlgorithm;
-    static private BigInteger _sumIndexParallelAlgorithm;
+    static private BigInteger _sumIndexNotSafeParallelAlgorithm;
+    static private BigInteger _sumIndexSafeParallelAlgorithm;
 
     private static void Main(string[] args)
     {
@@ -19,8 +20,10 @@ internal class Program
             Console.WriteLine();
 
             CalculeteTimeSequentialAlgorithm(pixcelData);
-            CalculeteTimeParallelAlgorithm(pixcelData);
-            ConclusionResultsDifference();
+            CalculeteTimeNotSafeParallelAlgorithm(pixcelData);
+            CalculeteTimeSafeParallelAlgorithm(pixcelData);
+            ConclusionResultsDifferenceNotSafe();
+            ConclusionResultsDifferenceSafe();
 
             Console.WriteLine();
         }
@@ -33,10 +36,17 @@ internal class Program
         return pixcelData;
     }
 
-    static private void ConclusionResultsDifference()
+    static private void ConclusionResultsDifferenceNotSafe()
     {
-        Console.WriteLine($"Разница по сумме индексов - {_sumIndexSequentialAlgorithm - _sumIndexParallelAlgorithm}");
+        Console.WriteLine($"Разница по сумме индексов (не безопасный) - {_sumIndexSequentialAlgorithm - _sumIndexNotSafeParallelAlgorithm}");
     }
+
+    static private void ConclusionResultsDifferenceSafe()
+    {
+        Console.WriteLine($"Разница по сумме индексов (безопасный) - {_sumIndexSequentialAlgorithm - _sumIndexSafeParallelAlgorithm}");
+    }
+
+
 
     static private void CalculeteTimeSequentialAlgorithm(double[] pixcelData)
     {
@@ -44,9 +54,15 @@ internal class Program
         _sumIndexSequentialAlgorithm = sequentialAlgorithm.CalculeteTimeSequentialAlgorithm(pixcelData);
     }
 
-    static private void CalculeteTimeParallelAlgorithm(double[] pixcelData)
+    static private void CalculeteTimeNotSafeParallelAlgorithm(double[] pixcelData)
     {
-        ParallelAlgorithm parallelAlgorithm = new ParallelAlgorithm(2, 3);
-        _sumIndexParallelAlgorithm = parallelAlgorithm.CalculeteTimeParalellAlgorithm(pixcelData);
+        NotSafeParallelAlgorithm parallelAlgorithm = new NotSafeParallelAlgorithm(2, 3);
+        _sumIndexNotSafeParallelAlgorithm = parallelAlgorithm.CalculeteTimeParalellAlgorithm(pixcelData);
+    }
+
+    static private void CalculeteTimeSafeParallelAlgorithm(double[] pixcelData)
+    {
+        SafeParallelAlgorithm parallelAlgorithm = new SafeParallelAlgorithm(2, 3);
+        _sumIndexSafeParallelAlgorithm = parallelAlgorithm.CalculeteTimeParalellAlgorithm(pixcelData);
     }
 }
