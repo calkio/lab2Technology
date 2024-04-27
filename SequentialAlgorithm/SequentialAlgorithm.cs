@@ -62,7 +62,7 @@ namespace lab2.SequentialAlgorithm
 
         private BigInteger SumIndexDeviationSequentialAlgorithm(int[] indexDeviation)
         {
-            BigInteger sum = indexDeviation.Max();
+            BigInteger sum = 0;
             for (int i = 0; i < indexDeviation.Length; i++)
             {
                 sum += indexDeviation[i] * i;
